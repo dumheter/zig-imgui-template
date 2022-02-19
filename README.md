@@ -20,4 +20,4 @@ if (show_demo_window) {
   c.igShowDemoWindow(&show_demo_window);
 }
 ```
-[preview image](https://github.com/dumheter/zig-imgui-template/blob/main/preview.png)
+![preview image](https://github.com/dumheter/zig-imgui-template/blob/main/preview.png)
