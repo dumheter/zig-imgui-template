@@ -5,19 +5,21 @@ Zig imgui template that uses opengl3 and glfw, where glfw already has zig bindin
 ``` zig
 // YOUR CODE GOES HERE
 {
-  _ = c.igBegin("Your code goes here", 0, 0);
-  c.igText("It's this easy to draw text with imgui");
-  var text_size: c.ImVec2 = undefined;
-  c.igCalcTextSize(&text_size, "toggle imgui demo", null, true, 1000.0);
-  if (c.igButton("toggle imgui demo", c.ImVec2{.x = text_size.x + 8, .y = text_size.y + 8})) {
-    show_demo_window = !show_demo_window;
-  }
-  c.igEnd();
-}
+    var open: bool = true;
+    _ = zimgui.begin("Your code goes here", &open, zimgui.WindowFlags.None);
 
-// draw imgui's demo window
-if (show_demo_window) {
-  c.igShowDemoWindow(&show_demo_window);
+    imgui.text("It's this easy to draw text with (z)imgui");
+
+    if (zimgui.button("toggle imgui demo", null)) {
+        show_demo_window = !show_demo_window;
+    }
+
+    // draw imgui's demo window
+    if (show_demo_window) {
+        zimgui.showDemoWindow(&show_demo_window);
+    }
+
+    zimgui.end();
 }
 ```
 ![preview image](https://github.com/dumheter/zig-imgui-template/blob/main/preview.png)

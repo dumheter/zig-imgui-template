@@ -57,7 +57,7 @@ pub fn main() !void {
         var bytes_per_pixel: i32 = undefined;
         io.fonts.getTexDataAsRGBA32(&text_pixels, &text_w, &text_h, &bytes_per_pixel);
         var font_config = zimgui.FontConfig.init();
-        //io.fonts.clearFonts();
+
         io.font_default = io.fonts.addFontFromFileTTF("res/font/CascadiaMonoPL.ttf", 15.0, &font_config, io.fonts.getGlyphRangesDefault());
         
         _ = io.fonts.build();
@@ -97,12 +97,12 @@ pub fn main() !void {
                 show_demo_window = !show_demo_window;
             }
 
-            zimgui.end();
-        }
+            // draw imgui's demo window
+            if (show_demo_window) {
+                zimgui.showDemoWindow(&show_demo_window);
+            }
 
-        // draw imgui's demo window
-        if (show_demo_window) {
-            zimgui.showDemoWindow(&show_demo_window);
+            zimgui.end();
         }
 
         ///////////////////////////////////////////////////////////////////////////////
