@@ -1,30 +1,26 @@
 const Builder = @import("std").build.Builder;
 const glfw = @import("deps/mach-glfw/build.zig");
+const zimgui = @import("deps/zimgui/build.zig");
 
 pub fn build(b: *Builder) void {
     const target = b.standardTargetOptions(.{});
-
     const mode = b.standardReleaseOptions();
 
-    const exe = b.addExecutable("dedit", "src/main.zig");
+    const exe = b.addExecutable("zig-imgui-template", "src/main.zig");
     exe.setTarget(target);
     exe.setBuildMode(mode);
 
+    // Add glfw to our project.
     exe.addPackagePath("glfw", "deps/mach-glfw/src/main.zig");
     glfw.link(b, exe, .{});
 
-    exe.addCSourceFiles(&[_][]const u8 {
-        "deps/imgui/imgui.cpp",
-        "deps/imgui/imgui_draw.cpp",
-        "deps/imgui/imgui_tables.cpp",
-        "deps/imgui/imgui_widgets.cpp",
-        "deps/imgui/imgui_demo.cpp",
-        "deps/imgui/cimgui/imgui_impl_glfw.cpp",
-        "deps/imgui/cimgui/imgui_impl_opengl3.cpp",
-        "deps/imgui/cimgui/cimgui.cpp",
-        }, &[_][]const u8 {});
-    exe.linkLibCpp();
-    exe.addIncludeDir("deps/imgui");
+    // Add the zig imgui bindings via zimgui.
+    exe.addPackagePath("zimgui", "deps/zimgui/src/zimgui.zig");
+    // Also, add the backend which will be rendering imgui.
+    exe.addPackagePath("zimgui_backend", "deps/zimgui/src/backend_glfw_opengl3.zig");
+    // Link it together.
+    _ = zimgui.link(b, exe);
+    zimgui.addBackendGlfwOpenGl3(b, exe);
 
     exe.install();
     b.default_step.dependOn(&exe.step);

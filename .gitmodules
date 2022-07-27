@@ -1,3 +1,6 @@
 [submodule "deps/mach-glfw"]
 	path = deps/mach-glfw
 	url = https://github.com/hexops/mach-glfw
+[submodule "deps/zimgui"]
+	path = deps/zimgui
+	url = https://github.com/dumheter/zimgui

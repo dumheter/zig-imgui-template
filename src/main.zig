@@ -1,23 +1,22 @@
 const std = @import("std");
-const c = @import("c.zig").c;
 const glfw = @import("glfw");
-const theme = @import("theme.zig");
+const zimgui = @import("zimgui");
+const zimgui_backend = @import("zimgui_backend");
 
 pub fn main() !void {
     std.debug.print("-*- zig imgui template -*-\n", .{});
 
-    var font: *c.ImFont = undefined;
     var run: bool = true;
 
-    var display_size = c.ImVec2{
+    const display_size = zimgui.Vec2{
         .x = 1280,
         .y = 720,
     };
 
     // setup glfw & imgui
     var window: glfw.Window = undefined;
-    var context: *c.ImGuiContext = undefined;
-    var io: *c.ImGuiIO = undefined;
+    var context: zimgui.Context = undefined;
+    var io: *zimgui.IO = undefined;
     {
         try glfw.init(glfw.InitHints{});
 
@@ -35,30 +34,36 @@ pub fn main() !void {
         try glfw.makeContextCurrent(window);
         try glfw.swapInterval(1); // vsync
 
-        std.debug.print("imgui version: {s}\n", .{c.igGetVersion()});
-        context = c.igCreateContext(null);
+        std.debug.print("imgui version: {s}\n", .{zimgui.getVersion()});
+        context = zimgui.Context.init();
 
-        theme.setImguiTheme(&c.igGetStyle().*.Colors);
+        
 
-        if (!c.ImGui_ImplGlfw_InitForOpenGL(@ptrCast(*c.GLFWwindow, window.handle), true)) {
-            std.debug.panic("", .{});
+        // @ptrCast(*c.GLFWwindow, window.handle), true)
+        if (!zimgui_backend.Glfw.initForOpenGL(window.handle, true)) {
+            std.debug.panic("Failed to init glfw for OpenGL.", .{});
         }
 
         const glsl_version = "#version 130";
-        if (!c.ImGui_ImplOpenGL3_Init(glsl_version)) {
-            std.debug.panic("could not init opengl", .{});
+        if (!zimgui_backend.OpenGL3.init(glsl_version)) {
+            std.debug.panic("Failed to init OpenGL3.", .{});
         }
 
-        io = c.igGetIO();
+        io = zimgui.IO.get();
+        zimgui.setImguiTheme();
         var text_pixels: [*c]u8 = undefined;
         var text_w: i32 = undefined;
         var text_h: i32 = undefined;
-        c.ImFontAtlas_GetTexDataAsRGBA32(io.Fonts, &text_pixels, &text_w, &text_h, null);
-        font = c.ImFontAtlas_AddFontFromFileTTF(io.Fonts, "res/font/CascadiaMonoPL.ttf", 15.0, null, c.ImFontAtlas_GetGlyphRangesDefault(io.Fonts));
-        _ = c.ImFontAtlas_Build(io.Fonts);
+        var bytes_per_pixel: i32 = undefined;
+        io.fonts.getTexDataAsRGBA32(&text_pixels, &text_w, &text_h, &bytes_per_pixel);
+        var font_config = zimgui.FontConfig.init();
+        //io.fonts.clearFonts();
+        io.font_default = io.fonts.addFontFromFileTTF("res/font/CascadiaMonoPL.ttf", 15.0, &font_config, io.fonts.getGlyphRangesDefault());
+        
+        _ = io.fonts.build();
 
-        io.DisplaySize = display_size;
-        io.DeltaTime = 1.0 / 60.0;
+        io.display_size = display_size;
+        io.delta_time = 1.0 / 60.0;
     }
 
     // run loop
@@ -74,43 +79,42 @@ pub fn main() !void {
             run = false;
         }
 
-        c.ImGui_ImplOpenGL3_NewFrame();
-        c.ImGui_ImplGlfw_NewFrame();
-        c.igNewFrame();
-        c.igPushFont(font);
+        zimgui_backend.OpenGL3.newFrame();
+        zimgui_backend.OpenGL3.newFrame();
+        zimgui.newFrame();
+        zimgui.pushFont(io.font_default);
 
         ///////////////////////////////////////////////////////////////////////////////
         // YOUR CODE GOES HERE
 
         {
-            _ = c.igBegin("Your code goes here", 0, 0);
+            var open: bool = true;
+            _ = zimgui.begin("Your code goes here", &open, zimgui.WindowFlags.None);
 
-            c.igText("It's this easy to draw text with imgui");
+            zimgui.text("It's this easy to draw text with (z)imgui");
 
-            var text_size: c.ImVec2 = undefined;
-            c.igCalcTextSize(&text_size, "toggle imgui demo", null, true, 1000.0);
-            if (c.igButton("toggle imgui demo", c.ImVec2{.x = text_size.x + 8, .y = text_size.y + 8})) {
+            if (zimgui.button("toggle imgui demo", null)) {
                 show_demo_window = !show_demo_window;
             }
 
-            c.igEnd();
+            zimgui.end();
         }
 
         // draw imgui's demo window
         if (show_demo_window) {
-            c.igShowDemoWindow(&show_demo_window);
+            zimgui.showDemoWindow(&show_demo_window);
         }
 
         ///////////////////////////////////////////////////////////////////////////////
 
-        c.igPopFont();
-        c.igRender();
+        zimgui.popFont();
+        zimgui.render();
 
         if (window.getFramebufferSize()) |size| {
-            c.glViewport(0, 0, @intCast(c_int, size.width), @intCast(c_int, size.height));
-            c.glClearColor(0.9, 0.9, 0.9, 0);
-            c.glClear(c.GL_COLOR_BUFFER_BIT);
-            c.ImGui_ImplOpenGL3_RenderDrawData(c.igGetDrawData());
+            zimgui_backend.OpenGL3.glViewport(0, 0, size.width, size.height);
+            zimgui_backend.OpenGL3.glClearColor(0.9, 0.9, 0.9, 0);
+            zimgui_backend.OpenGL3.glClear(zimgui_backend.ClearMask.GL_COLOR_BUFFER_BIT);
+            zimgui_backend.OpenGL3.renderDrawData(zimgui.DrawData.get().data);
         } else |err| {
             std.debug.panic("failed to get frame buffer size: {}", .{err});
         }
@@ -121,7 +125,7 @@ pub fn main() !void {
     }
 
     // cleanup
-    c.igDestroyContext(context);
+    context.deinit();
     window.destroy();
     glfw.terminate();
 }
