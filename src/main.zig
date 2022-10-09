@@ -15,8 +15,8 @@ pub fn main() !void {
 
     // setup glfw & imgui
     var window: glfw.Window = undefined;
-    var context: zimgui.Context = undefined;
-    var io: *zimgui.IO = undefined;
+    var ctx: zimgui.Context = undefined;
+    var io: zimgui.Io = undefined;
     {
         try glfw.init(glfw.InitHints{});
 
@@ -35,11 +35,11 @@ pub fn main() !void {
         try glfw.swapInterval(1); // vsync
 
         std.debug.print("imgui version: {s}\n", .{zimgui.getVersion()});
-        context = zimgui.Context.init();
+        zimgui.init();
+        ctx = zimgui.getCurrentContext() orelse unreachable;
 
-        
+        zimgui.setImguiTheme();
 
-        // @ptrCast(*c.GLFWwindow, window.handle), true)
         if (!zimgui_backend.Glfw.initForOpenGL(window.handle, true)) {
             std.debug.panic("Failed to init glfw for OpenGL.", .{});
         }
@@ -49,21 +49,15 @@ pub fn main() !void {
             std.debug.panic("Failed to init OpenGL3.", .{});
         }
 
-        io = zimgui.IO.get();
-        zimgui.setImguiTheme();
-        var text_pixels: [*c]u8 = undefined;
-        var text_w: i32 = undefined;
-        var text_h: i32 = undefined;
-        var bytes_per_pixel: i32 = undefined;
-        io.fonts.getTexDataAsRGBA32(&text_pixels, &text_w, &text_h, &bytes_per_pixel);
-        var font_config = zimgui.FontConfig.init();
+        io = ctx.getIo();
+        var font_atlas = io.getFontAtlas();
 
-        io.font_default = io.fonts.addFontFromFileTTF("res/font/CascadiaMonoPL.ttf", 15.0, &font_config, io.fonts.getGlyphRangesDefault());
-        
-        _ = io.fonts.build();
+        _ = font_atlas.addFontFromFileTTF("res/font/CascadiaMonoPL.ttf", 15.0);
+        if (!font_atlas.build()) {
+            std.debug.print("Failed to build fonts.", .{});
+        }
 
-        io.display_size = display_size;
-        io.delta_time = 1.0 / 60.0;
+        io.setDisplaySize(display_size);
     }
 
     // run loop
@@ -82,18 +76,17 @@ pub fn main() !void {
         zimgui_backend.OpenGL3.newFrame();
         zimgui_backend.OpenGL3.newFrame();
         zimgui.newFrame();
-        zimgui.pushFont(io.font_default);
 
         ///////////////////////////////////////////////////////////////////////////////
         // YOUR CODE GOES HERE
 
         {
             var open: bool = true;
-            _ = zimgui.begin("Your code goes here", &open, zimgui.WindowFlags.None);
+            _ = zimgui.begin("Your code goes here", &open, zimgui.WindowFlags{});
 
-            zimgui.text("It's this easy to draw text with (z)imgui");
+            zimgui.text("It's this easy to draw text with (z)imgui", .{});
 
-            if (zimgui.button("toggle imgui demo", null)) {
+            if (zimgui.button("toggle imgui demo", .{}, null)) {
                 show_demo_window = !show_demo_window;
             }
 
@@ -107,14 +100,13 @@ pub fn main() !void {
 
         ///////////////////////////////////////////////////////////////////////////////
 
-        zimgui.popFont();
         zimgui.render();
 
         if (window.getFramebufferSize()) |size| {
             zimgui_backend.OpenGL3.glViewport(0, 0, size.width, size.height);
             zimgui_backend.OpenGL3.glClearColor(0.9, 0.9, 0.9, 0);
             zimgui_backend.OpenGL3.glClear(zimgui_backend.ClearMask.GL_COLOR_BUFFER_BIT);
-            zimgui_backend.OpenGL3.renderDrawData(zimgui.DrawData.get().data);
+            zimgui_backend.OpenGL3.renderDrawData(zimgui.getDrawData() orelse unreachable);
         } else |err| {
             std.debug.panic("failed to get frame buffer size: {}", .{err});
         }
@@ -125,7 +117,7 @@ pub fn main() !void {
     }
 
     // cleanup
-    context.deinit();
+    zimgui.deinit();
     window.destroy();
     glfw.terminate();
 }
