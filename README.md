@@ -1,5 +1,7 @@
 # Zig imgui template
-Zig imgui template that uses opengl3 and glfw, where glfw already has zig bindings provided by [mach-glfw](https://github.com/hexops/mach-glfw). Imgui (v 1.89 WIP) is provided using [cimgui](https://github.com/cimgui/cimgui), with some modifications made to the generated code to adapt it. A better font is included, [cascadia code](https://github.com/microsoft/cascadia-code). And finally, a solarized light theme is included.
+Zig imgui template that uses opengl3 and glfw, where glfw already has zig bindings provided by [mach-glfw](https://github.com/hexops/mach-glfw). Imgui (v 1.89 WIP) is provided using [zimgui](https://github.com/dumheter/zimgui), which has an incomplete set of imgui to zig bindings. A better font is included, [cascadia code](https://github.com/microsoft/cascadia-code). And finally, a solarized light theme is included.
+
+See commit 44560d5c5af9f8feb6a4ab6cbce5e5b13592e0a4 for an implementation using cimgui instead of zimgui.
 
 ## Preview
 ``` zig
