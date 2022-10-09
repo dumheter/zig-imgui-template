@@ -84,9 +84,9 @@ pub fn main() !void {
             var open: bool = true;
             _ = zimgui.begin("Your code goes here", &open, zimgui.WindowFlags{});
 
-            zimgui.text("It's this easy to draw text with (z)imgui", .{});
+            zimgui.text("It's this easy to draw text with (z)imgui.", .{});
 
-            if (zimgui.button("toggle imgui demo", .{}, null)) {
+            if (zimgui.button("Toggle imgui demo window.", .{}, null)) {
                 show_demo_window = !show_demo_window;
             }
 

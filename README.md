@@ -6,11 +6,11 @@ Zig imgui template that uses opengl3 and glfw, where glfw already has zig bindin
 // YOUR CODE GOES HERE
 {
     var open: bool = true;
-    _ = zimgui.begin("Your code goes here", &open, zimgui.WindowFlags.None);
+    _ = zimgui.begin("Your code goes here", &open, zimgui.WindowFlags{});
 
-    imgui.text("It's this easy to draw text with (z)imgui");
+    zimgui.text("It's this easy to draw text with (z)imgui.", .{});
 
-    if (zimgui.button("toggle imgui demo", null)) {
+    if (zimgui.button("Toggle imgui demo window.", .{}, null)) {
         show_demo_window = !show_demo_window;
     }
 
