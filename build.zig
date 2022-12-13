@@ -12,7 +12,7 @@ pub fn build(b: *Builder) void {
 
     // Add glfw to our project.
     exe.addPackagePath("glfw", "deps/mach-glfw/src/main.zig");
-    glfw.link(b, exe, .{});
+    glfw.link(b, exe, .{}) catch unreachable;
 
     // Add the zig imgui bindings via zimgui.
     exe.addPackagePath("zimgui", "deps/zimgui/src/zimgui.zig");
