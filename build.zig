@@ -16,11 +16,11 @@ pub fn build(b: *Builder) void {
 
     // Add the zig imgui bindings via zimgui.
     exe.addPackagePath("zimgui", "deps/zimgui/src/zimgui.zig");
-    _ = zimgui.link(b, exe);
+    _ = zimgui.link(b, exe, .{});
 
     // Also, add the backend which will be rendering imgui.
     exe.addPackagePath("zimgui_backend", "deps/zimgui/src/backend_glfw_opengl3.zig");
-    zimgui.addBackendGlfwOpenGl3(b, exe);
+    zimgui.addBackendGlfwOpenGl3(b, exe, .{});
 
     exe.install();
     b.default_step.dependOn(&exe.step);

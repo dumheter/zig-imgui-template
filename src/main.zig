@@ -66,7 +66,7 @@ pub fn main() !void {
 
         io.setDisplaySize(display_size);
 
-        zgl.enable(zgl.Enum.DEBUG_OUTPUT);
+        zgl.enable(zgl.DEBUG_OUTPUT) catch {};
         var not_user_param: usize = undefined;
         zgl.debugMessageCallback(onOpenGl3DebugMessage, @ptrCast(*const anyopaque, &not_user_param));
     }
@@ -115,9 +115,9 @@ pub fn main() !void {
         zui.render();
 
         if (window.getFramebufferSize()) |size| {
-            zgl.viewport(0, 0, size.width, size.height);
+            try zgl.viewport(0, 0, @intCast(i32, size.width), @intCast(i32, size.height));
             zgl.clearColor(0.9, 0.9, 0.9, 0);
-            zgl.clear(zgl.Enum.COLOR_BUFFER_BIT);
+            try zgl.clear(zgl.COLOR_BUFFER_BIT);
             zgl.renderDrawData(zui.getDrawData() orelse unreachable);
         } else |err| {
             std.debug.panic("failed to get frame buffer size: {}", .{err});
@@ -141,7 +141,7 @@ fn glfwErrorCallback(error_code: glfw.Error, msg: [:0]const u8) void {
     std.debug.print("glfw error {}: {s}\n", .{error_code, msg});
 }
 
-fn onOpenGl3DebugMessage(source: zgl.Enum.ValueType, type_: zgl.Enum.ValueType, id: u32, severity: zgl.Enum.ValueType, length: i32, message: [*c]const u8, user_param: *const anyopaque) void {
+fn onOpenGl3DebugMessage(source: zgl.ValueType, type_: zgl.ValueType, id: u32, severity: zgl.ValueType, length: i32, message: [*c]const u8, user_param: *const anyopaque) void {
     _ = user_param;
     var msg = message[0..@intCast(usize, length)];
     std.debug.print("OpenGL3: {{id: {}, severity: {}, message: {s}, source: {}, type: {}}}\n", .{id, severity, msg, source, type_});
