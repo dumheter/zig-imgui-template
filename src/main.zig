@@ -18,11 +18,13 @@ pub fn main() !void {
     var ctx: zui.Context = undefined;
     var io: zui.Io = undefined;
     {
-        try glfw.init(glfw.InitHints{});
+        if (!glfw.init(glfw.InitHints{})) {
+            std.debug.panic("Failed to init glfw\n", .{});
+        }
 
         glfw.setErrorCallback(glfwErrorCallback);
 
-        window = try glfw.Window.create(
+        window = glfw.Window.create(
             @floatToInt(u32, display_size.x),
             @floatToInt(u32, display_size.y),
             "zig imgui template",
@@ -32,10 +34,10 @@ pub fn main() !void {
                 .context_version_major = 4,
                 .context_version_minor = 5,
                 .opengl_profile = .opengl_core_profile,
-        });
+        }) orelse std.debug.panic("Failed to create window\n", .{});
 
-        try glfw.makeContextCurrent(window);
-        try glfw.swapInterval(1); // vsync
+        glfw.makeContextCurrent(window);
+        glfw.swapInterval(1); // vsync
 
         if (zgl.gladLoadGLLoader(glfw.getProcAddress) == 0) {
             std.debug.panic("Could not pass glad the loader function.\n", .{});
@@ -115,14 +117,11 @@ pub fn main() !void {
 
         zui.render();
 
-        if (window.getFramebufferSize()) |size| {
-            try zgl.viewport(0, 0, @intCast(i32, size.width), @intCast(i32, size.height));
-            zgl.clearColor(0.9, 0.9, 0.9, 0);
-            try zgl.clear(zgl.COLOR_BUFFER_BIT);
-            zgl.renderDrawData(zui.getDrawData() orelse unreachable);
-        } else |err| {
-            std.debug.panic("failed to get frame buffer size: {}", .{err});
-        }
+        const size = window.getFramebufferSize();
+        try zgl.viewport(0, 0, @intCast(i32, size.width), @intCast(i32, size.height));
+        zgl.clearColor(0.9, 0.9, 0.9, 0);
+        try zgl.clear(zgl.COLOR_BUFFER_BIT);
+        zgl.renderDrawData(zui.getDrawData() orelse unreachable);
 
         if (window.swapBuffers()) {} else |err| {
             std.debug.panic("failed to swap buffers: {}", .{err});
@@ -138,7 +137,7 @@ pub fn main() !void {
 ///////////////////////////////////////////////////////////////////////////////
 // See debug messages from glfw and opengl
 
-fn glfwErrorCallback(error_code: glfw.Error, msg: [:0]const u8) void {
+fn glfwErrorCallback(error_code: glfw.ErrorCode, msg: [:0]const u8) void {
     std.debug.print("glfw error {}: {s}\n", .{error_code, msg});
 }
 
